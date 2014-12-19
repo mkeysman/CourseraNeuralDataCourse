@@ -1,0 +1,12 @@
+# metadata for: 71 - track 7c driftbars.srf, auto-generated on 26/11/2007 6:43:22 PM.
+filename_prefix	    = 't'
+filename_suffix     = 'spk'
+timestamp_precision = 1E-5
+datatype            = 'int64'
+encoding            = 'binary offset'
+byteorder           = 'little_endian'
+units               = 's'
+units_multiplier    = 1E-6
+filter_HPF          = 500
+filter_LPF          = 6000
+
