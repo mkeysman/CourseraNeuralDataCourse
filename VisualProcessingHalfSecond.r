@@ -7,21 +7,20 @@
 #######################################################################
 spkFiles <- c('t00', 't02', 't04', 't08', 't10', 't18', 't23', 't25', 't26', 't27')
 
-spikes <- mat.or.vec(7250,11)
-spikes[,1] <- c(1:7250)/
+spikes <- mat.or.vec(72500,11)
+spikes[,1] <- c(1:72500)/100
 colnames(spikes) <- c('time', spkFiles)
 for (i in 1:10){
   nom <- paste0('Data/',spkFiles[i],'.spk')
   holdem <- readBin(nom, 'integer', n = 100000, size = 8, endian = 'little')
-  lengt <- lengt + length(holdem)
   for (j in holdem){
-    spikes[floor((j+50000)/100000),(i+1)] <- spikes[floor((j+50000)/100000),(i+1)]+1
+    spikes[floor((j+5000)/10000),(i+1)] <- spikes[floor((j+5000)/10000),(i+1)]+1
   }
 }
 spikes <- as.data.frame(spikes)
-spikes[,1] <- c(1:7250)/10
 colnames(spikes)<- c('time', spkFiles)
-write.csv(spikes, 'spikes.csv')
+dir.create('HalfSecond')
+write.csv(spikes, 'HalfSecond/spikes.csv')
 
 
 # Process the stimulis data and add a stimulis column to spikes
@@ -30,35 +29,38 @@ stim <- readBin('Data//drifting_bar.din', 'integer', n = 1000000, size = 8, endi
 dim(stim) <- c(2,115200)
 stim <- t(stim)
 
-spikes[,12] <- rep(-1, 7250)
+spikes[,12] <- rep(-1, 72500)
 names(spikes)[12] <- 'stim_angle'
 
-for (i in 1:115200){spikes[floor((stim[i,1]+50000)/100000),12] <- stim[i,2]}
+for (i in 1:115200){spikes[floor((stim[i,1]+5000)/10000),12] <- stim[i,2]}
 
 # Find the transitions in stimuli
 trans <- c()
-for (i in 2:7250){
+for (i in 2:72500){
   if ((spikes[i,12] - spikes[(i-1),12])*(spikes[i,12] + 1) != 0){trans <- c(trans, i)}
 }
 
 
-# average the spikes in tenth second intervals for each angle.
+# average the spikes in tenth second intervals for each angle over 
+# the first half second.
 
-agg <- array(rep(0, 10*180*40), c(18,10,40))
+agg <- array(rep(0, 10*180*50), c(18,10,50))
   for(i in 1:144){
     for (j in 1:10){
-      for (k in 0:39){
+      for (k in 0:49){
         agg[(spikes[trans[i],12]+1),j,(k+1)] <- agg[(spikes[trans[i],12]+1),j,(k+1)] + spikes[(trans[i]+k),(j+1)]
       }
     }
   }
 
+time <- c(1:50)/100
+
 # plot the beasts
 farbe <- c('black', 'cyan', 'red', 'orange', 'brown', 'magenta', 'orangered', 'green', 'blue', 'violet')
 for (i in 0:17){
-  nom <- paste0('Images/Angle', 10*i,'.png')
+  nom <- paste0('HalfSecond/Angle', 10*i,'.png')
   png(nom, width = 6, height = 5, units = 'in', res = 72)
-  plot(time, rep(max(agg[(i+1),,])/2,40), type = 'n', ylab = 'spikes (/tenth sec)', xlab = 'time (sec)')
+  plot(time, rep(max(agg[(i+1),,])/2,50), type = 'n', ylab = 'spikes (/hundredth sec)', xlab = 'time (sec)')
   for (j in 1:10){
     lines(time, agg[(i+1),j,], col = farbe[j])}
   title(main = paste0(10*i, ' degree bar'))
@@ -109,7 +111,7 @@ grph[,3]<-as.factor(Comp)
 
 # plot the components on a lattice plot
 library(lattice)
-png('Images/PCAResponse.png', width = 10, height = 8, units = 'in', res = 72)
+png('HalfSecond/PCAResponse.png', width = 10, height = 8, units = 'in', res = 72)
 xyplot(Amplitude~Orientation | Component, grph, type = 'l', layout = c(3,6), main = 'Component Responses')
 # title(main = 'Component Responses')
 dev.off()
